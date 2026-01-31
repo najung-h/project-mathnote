@@ -8,8 +8,6 @@ from app.config import Settings, get_settings
 from app.services.storage.base import BaseStorageClient
 from app.services.storage.local_client import LocalStorageClient
 from app.services.llm.base import BaseLLMClient
-from app.services.llm.openai_client import OpenAIClient
-from app.services.llm.gemini_client import GeminiClient
 from app.services.llm.nvidia_client import NvidiaClient
 
 
@@ -27,22 +25,7 @@ def get_llm_client(
     settings: Annotated[Settings, Depends(get_settings)]
 ) -> BaseLLMClient:
     """Get LLM client based on configuration"""
-    if settings.LLM_PROVIDER == "openai":
-        return OpenAIClient(
-            api_key=settings.OPENAI_API_KEY,
-            model=settings.LLM_MODEL,
-            vision_model=settings.LLM_VISION_MODEL,
-            temperature=settings.LLM_TEMPERATURE,
-            max_tokens=settings.LLM_MAX_TOKENS,
-        )
-    elif settings.LLM_PROVIDER == "gemini":
-        return GeminiClient(
-            api_key=settings.GOOGLE_API_KEY or "",
-            model=settings.LLM_MODEL,
-            temperature=settings.LLM_TEMPERATURE,
-            max_tokens=settings.LLM_MAX_TOKENS,
-        )
-    elif settings.LLM_PROVIDER == "nvidia":
+    if settings.LLM_PROVIDER == "nvidia":
         return NvidiaClient(
             api_key=settings.NVIDIA_API_KEY,
             model=settings.LLM_MODEL,

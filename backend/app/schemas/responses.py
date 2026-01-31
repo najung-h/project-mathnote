@@ -17,14 +17,6 @@ class UploadResponse(BaseModel):
     status: Literal["uploaded"] = Field(..., description="상태")
 
 
-class ConfirmUploadResponse(BaseModel):
-    """업로드 완료 확인 응답"""
-
-    task_id: str = Field(..., description="작업 ID")
-    s3_key: str = Field(..., description="S3 객체 키")
-    status: Literal["uploaded"] = Field(..., description="상태")
-
-
 class ProcessVideoResponse(BaseModel):
     """비디오 처리 시작 응답"""
 

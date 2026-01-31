@@ -4,7 +4,7 @@ from datetime import datetime
 
 # 설정
 API_BASE_URL = "http://localhost:8000/api/v1"
-TASK_ID = "d8f37bb8-3a2f-4301-bc42-8f043a82db04" # 방금 생성된 ID
+TASK_ID = "0803be1b-6981-431f-8ce0-335e6df1e3db" # 방금 생성된 ID
 LOG_FILE = "e2e_test_result.log"
 
 def log(message):

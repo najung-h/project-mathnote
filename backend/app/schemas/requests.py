@@ -6,17 +6,6 @@ from pydantic import BaseModel, Field
 # ==================== Video Requests ====================
 
 
-class UploadUrlRequest(BaseModel):
-    """S3 Presigned Upload URL 요청"""
-
-    filename: str = Field(..., description="파일명", examples=["lecture.mp4"])
-    content_type: str = Field(
-        default="video/mp4",
-        description="MIME 타입",
-        examples=["video/mp4", "video/webm"],
-    )
-
-
 class VideoUrlRequest(BaseModel):
     """URL 비디오 다운로드 요청"""
 
