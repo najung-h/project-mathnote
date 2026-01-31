@@ -1,15 +1,14 @@
 """Video API routes - 영상 업로드 및 처리"""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, File, UploadFile
 
 from app.api.deps import StorageClientDep, SettingsDep
-from app.schemas.requests import UploadUrlRequest, ProcessVideoRequest
+from app.schemas.requests import ProcessVideoRequest
 from app.schemas.responses import (
-    UploadUrlResponse,
-    ConfirmUploadResponse,
+    UploadResponse,
     ProcessVideoResponse,
     TaskStatusResponse,
     ProgressDetail,
@@ -22,67 +21,34 @@ router = APIRouter()
 _task_store: dict[str, dict] = {}
 
 
-@router.post("/upload-url", response_model=UploadUrlResponse)
-async def get_upload_url(
-    request: UploadUrlRequest,
+@router.post("/upload", response_model=UploadResponse)
+async def upload_video(
     storage: StorageClientDep,
-    settings: SettingsDep,
+    file: UploadFile = File(...),
 ):
-    """S3 Presigned Upload URL 발급"""
+    """비디오 파일 업로드 (Multipart)"""
     task_id = str(uuid.uuid4())
-    s3_key = f"videos/{task_id}/original.mp4"
+    # 파일 확장자 추출
+    extension = file.filename.split(".")[-1] if file.filename else "mp4"
+    file_key = f"videos/{task_id}/original.{extension}"
 
-    upload_url = await storage.generate_presigned_upload_url(
-        key=s3_key,
-        content_type=request.content_type,
-        expires_in=settings.S3_PRESIGNED_URL_EXPIRY,
-    )
-
-    expires_at = datetime.now(timezone.utc) + timedelta(
-        seconds=settings.S3_PRESIGNED_URL_EXPIRY
-    )
+    # 파일 읽기 및 저장
+    file_data = await file.read()
+    file_url = await storage.upload(key=file_key, data=file_data, content_type=file.content_type or "video/mp4")
 
     # 태스크 초기화
     _task_store[task_id] = {
-        "status": "pending",
-        "s3_key": s3_key,
-        "filename": request.filename,
+        "status": "uploaded",
+        "s3_key": file_key, # 로컬에서는 파일 경로 키 역할
+        "filename": file.filename,
         "created_at": datetime.now(timezone.utc),
         "progress": {"vision": 0.0, "audio": 0.0, "synthesis": 0.0},
         "error_message": None,
     }
 
-    return UploadUrlResponse(
+    return UploadResponse(
         task_id=task_id,
-        upload_url=upload_url,
-        expires_at=expires_at,
-    )
-
-
-@router.post("/{task_id}/confirm-upload", response_model=ConfirmUploadResponse)
-async def confirm_upload(
-    task_id: str,
-    storage: StorageClientDep,
-):
-    """업로드 완료 확인 및 S3 객체 검증"""
-    from app.core.exceptions import task_not_found_exception
-
-    if task_id not in _task_store:
-        raise task_not_found_exception(task_id)
-
-    task = _task_store[task_id]
-    s3_key = task["s3_key"]
-
-    # S3 객체 존재 확인
-    exists = await storage.object_exists(s3_key)
-    if not exists:
-        raise task_not_found_exception(task_id)
-
-    task["status"] = "uploaded"
-
-    return ConfirmUploadResponse(
-        task_id=task_id,
-        s3_key=s3_key,
+        file_url=file_url,
         status="uploaded",
     )
 
