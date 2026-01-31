@@ -229,6 +229,22 @@ class VideoProcessingService:
         with open(output_dir / "note.md", "w", encoding="utf-8") as f:
             f.write(note.markdown_content)
             
+        # 4. 전체 대본(Transcript) JSON 저장
+        import json
+        transcript_data = {
+            "full_text": transcript_result.text,
+            "segments": [
+                {
+                    "start": s.start,
+                    "end": s.end,
+                    "text": s.text
+                }
+                for s in transcript_result.segments
+            ]
+        }
+        with open(output_dir / "transcript.json", "w", encoding="utf-8") as f:
+            json.dump(transcript_data, f, ensure_ascii=False, indent=2)
+
         # JSON 데이터 저장 (필요 시)
         
         # Task 업데이트
