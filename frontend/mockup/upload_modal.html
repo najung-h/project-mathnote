@@ -1,0 +1,82 @@
+<div id="uploadModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center px-6">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
+    
+    <div class="relative bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden transform transition-all">
+        <div class="p-8">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <h3 class="text-2xl font-bold mb-2">강의 분석 시작하기</h3>
+            <p class="text-slate-500 text-sm mb-8">영상을 업로드하면 AI가 슬라이드와 음성을 분석합니다.</p>
+
+            <div class="flex gap-2 p-1 bg-slate-100 rounded-xl mb-6">
+                <button class="flex-1 py-2 text-sm font-bold bg-white rounded-lg shadow-sm">파일 업로드</button>
+                <button class="flex-1 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition">YouTube 링크</button>
+            </div>
+
+            <div class="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center hover:border-blue-500 hover:bg-blue-50/50 transition cursor-pointer group">
+                <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                </div>
+                <p class="font-bold text-slate-700">강의 영상 드래그 또는 클릭</p>
+                <p class="text-xs text-slate-400 mt-1">MP4, MOV (최대 500MB)</p>
+            </div>
+
+            <div class="mt-8 space-y-4">
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">추출 정밀도</p>
+                        <p class="text-[11px] text-slate-400 font-medium">슬라이드 전환 탐지 주기를 설정합니다.</p>
+                    </div>
+                    <select class="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="1">1초 마다 (기본)</option>
+                        <option value="3">3초 마다</option>
+                        <option value="5">5초 마다</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-3 px-1">
+                    <input type="checkbox" id="math" checked class="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500">
+                    <label for="math" class="text-xs font-bold text-slate-600">LaTeX 수식 정밀 변환 모드 활성화</label>
+                </div>
+            </div>
+
+            <button onclick="startAnalysis()" class="w-full mt-8 py-4 bg-blue-600 text-white font-extrabold rounded-2xl hover:bg-blue-700 transition shadow-xl shadow-blue-100 flex items-center justify-center gap-2">
+                <span>분석 및 노트 생성 시작</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple Modal Logic
+    function openModal() {
+        document.getElementById('uploadModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        document.getElementById('uploadModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function startAnalysis() {
+        alert('영상 분석을 시작합니다! (백엔드 파이프라인 가동)');
+        // 여기에 분석 시작 후 로딩 페이지로 넘어가는 로직 추가
+    }
+
+    // "지금 무료로 체험하기" 버튼에 openModal() 연결 필요
+    document.querySelectorAll('button').forEach(btn => {
+        if(btn.innerText.includes('무료로 시작하기') || btn.innerText.includes('지금 무료로 체험하기')) {
+            btn.onclick = openModal;
+        }
+    });
+</script>
