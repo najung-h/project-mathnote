@@ -8,6 +8,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import type { NoteResponse } from '@/types';
+import { noteService } from '@/services/noteService';
 
 interface NotePreviewProps {
   noteData?: NoteResponse | null;
@@ -17,12 +18,29 @@ interface NotePreviewProps {
 
 export function NotePreview({ noteData, isLoading = false, filename }: NotePreviewProps) {
   const [activeTab, setActiveTab] = useState<'preview' | 'original'>('preview');
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // noteData가 있으면 그것을 사용, 없으면 null
   const slides = noteData?.slides;
   
   // 제목 우선순위: 1. filename (영상명) 2. noteData.title 3. 기본값
   const title = filename || noteData?.title || 'Lecture Summary';
+
+  const handleNotionExport = async () => {
+    if (!noteData?.task_id) return;
+    
+    setIsSyncing(true);
+    try {
+      const result = await noteService.syncToNotion(noteData.task_id);
+      alert(`성공적으로 노션에 저장되었습니다!\nURL: ${result.notion_page_url}`);
+      window.open(result.notion_page_url, '_blank');
+    } catch (error) {
+      console.error('Notion sync failed:', error);
+      alert('노션 연동 중 오류가 발생했습니다.');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)]">
@@ -52,8 +70,21 @@ export function NotePreview({ noteData, isLoading = false, filename }: NotePrevi
             </button>
           </div>
           {noteData && (
-            <button className="text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm hover:shadow-md transition">
-              Export to Notion
+            <button 
+              onClick={handleNotionExport}
+              disabled={isSyncing}
+              className={`text-xs bg-white border border-slate-200 px-3 py-1.5 rounded-md shadow-sm hover:shadow-md transition flex items-center gap-2 ${
+                isSyncing ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isSyncing ? (
+                <>
+                  <div className="animate-spin w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full" />
+                  Syncing...
+                </>
+              ) : (
+                'Export to Notion'
+              )}
             </button>
           )}
         </div>

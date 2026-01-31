@@ -26,4 +26,14 @@ export const noteService = {
     );
     return response.data;
   },
+
+  /**
+   * 노션으로 노트 전송
+   */
+  syncToNotion: async (taskId: string): Promise<{ notion_page_url: string }> => {
+    const response = await apiClient.post<{ notion_page_url: string }>(
+      API_ENDPOINTS.NOTE.NOTION(taskId)
+    );
+    return response.data;
+  },
 };

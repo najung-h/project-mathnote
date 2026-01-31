@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GOOGLE_API_KEY: str | None = None
     NVIDIA_API_KEY: str = ""
+    NOTION_API_KEY: str = ""
+    NOTION_DATABASE_ID: str = ""
 
     # ==================== Local Storage 설정 ====================
     STORAGE_PATH: str = "storage"  # 파일 저장 루트 디렉토리

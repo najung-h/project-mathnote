@@ -87,6 +87,7 @@ async def fetch_video_url(
         "status": "pending", # 다운로드 대기/진행 중
         "s3_key": None,
         "filename": url,
+        "source_url": url,  # 원본 영상 URL 저장
         "created_at": datetime.now(timezone.utc),
         "progress": {"vision": 0.0, "audio": 0.0, "synthesis": 0.0},
         "error_message": None,
@@ -134,6 +135,7 @@ async def upload_video(
         "status": "uploaded",
         "s3_key": file_key, # 로컬에서는 파일 경로 키 역할
         "filename": file.filename,
+        "source_url": None,  # 파일 업로드는 원본 URL 없음
         "created_at": datetime.now(timezone.utc),
         "progress": {"vision": 0.0, "audio": 0.0, "synthesis": 0.0},
         "error_message": None,

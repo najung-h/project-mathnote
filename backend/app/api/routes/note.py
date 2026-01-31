@@ -11,6 +11,7 @@ from app.schemas.responses import (
     SlideImageResponse,
     SlideDetail,
 )
+from app.services.notion_service import notion_service
 
 router = APIRouter()
 
@@ -116,6 +117,25 @@ async def get_note(
     
     else:
         raise task_not_found_exception(task_id)
+
+
+@router.post("/{task_id}/notion")
+async def sync_to_notion(
+    task_id: str,
+    storage: StorageClientDep,
+    settings: SettingsDep,
+):
+    """노트를 노션으로 전송"""
+    # 1. 기존 get_note 로직을 재사용하여 데이터 준비
+    note = await get_note(task_id, storage, settings)
+
+    # 2. 원본 영상 URL 가져오기
+    source_url = _task_store.get(task_id, {}).get("source_url")
+
+    # 3. 노션 서비스 호출
+    page_url = await notion_service.create_lecture_page(note, source_url=source_url)
+
+    return {"notion_page_url": page_url}
 
 
 @router.get("/{task_id}/download", response_model=NoteDownloadResponse)

@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
   NOTE: {
     GET: (taskId: string) => `${API_PREFIX}/notes/${taskId}`,
     DOWNLOAD: (taskId: string) => `${API_PREFIX}/notes/${taskId}/download`,
+    NOTION: (taskId: string) => `${API_PREFIX}/notes/${taskId}/notion`,
   },
 } as const;
 
