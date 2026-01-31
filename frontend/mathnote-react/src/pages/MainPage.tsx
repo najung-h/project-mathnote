@@ -33,7 +33,7 @@ export function MainPage({
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null);
-  const [lectureTitle, setLectureTitle] = useState<string>('강의 영상');
+  const [filename, setFilename] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Welcome 페이지로 이동
@@ -47,6 +47,11 @@ export function MainPage({
       const status = await videoService.getStatus(taskId);
       setTaskStatus(status);
       console.log('Task status:', status);
+
+      // filename 추출
+      if (status.filename && !filename) {
+        setFilename(status.filename);
+      }
 
       // 영상 URL 업데이트 (s3_key가 있으면)
       if (status.s3_key && !videoUrl) {
@@ -199,7 +204,7 @@ export function MainPage({
             <VideoPlayer 
               videoUrl={videoUrl}
               youtubeUrl={youtubeUrl}
-              title={lectureTitle}
+              title={filename || '강의 영상'}
               onSosClick={handleSosClick} 
             />
             <LectureInfo 
@@ -210,7 +215,10 @@ export function MainPage({
 
           {/* Right Column - Note Preview */}
           <div className="col-span-12 lg:col-span-5">
-            <NotePreview noteData={taskStatus?.status === 'completed' ? noteData : null} />
+            <NotePreview 
+              noteData={taskStatus?.status === 'completed' ? noteData : null}
+              filename={filename}
+            />
           </div>
         </div>
       </main>

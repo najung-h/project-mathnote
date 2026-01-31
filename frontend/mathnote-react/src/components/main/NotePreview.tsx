@@ -2,46 +2,24 @@
  * Main Page - 노트 프리뷰 섹션
  */
 
-import { useEffect, useRef } from 'react';
-import katex from 'katex';
-import type { SlideData, NoteResponse } from '@/types';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import type { NoteResponse } from '@/types';
 
 interface NotePreviewProps {
   noteData?: NoteResponse | null;
   isLoading?: boolean;
+  filename?: string | null;
 }
 
-// 기본 데모 슬라이드 데이터
-const DEMO_SLIDES: SlideData[] = [
-  {
-    slide_number: 1,
-    timestamp_start: 0,
-    timestamp_end: 10.5,
-    image_url: '',
-    ocr_content: 'A\\mathbf{x} = \\lambda\\mathbf{x}',
-    audio_summary: '행렬 A가 벡터 x에 가하는 선형 변환이 단순히 크기만 변화시킬 때, λ를 고유값이라 함.',
-    sos_explanation: '여기서 det은 행렬식을 의미하며, 행렬 A - λI가 역행렬을 갖지 않도록 만드는 조건을 찾는 과정입니다.',
-  },
-];
-
-export function NotePreview({ noteData, isLoading = false }: NotePreviewProps) {
-  const equationRef = useRef<HTMLDivElement>(null);
-  
+export function NotePreview({ noteData, isLoading = false, filename }: NotePreviewProps) {
   // noteData가 있으면 그것을 사용, 없으면 null
   const slides = noteData?.slides;
-  const title = noteData?.title || 'Lecture Summary';
-
-  useEffect(() => {
-    if (equationRef.current && slides && slides.length > 0) {
-      try {
-        katex.render(slides[0].ocr_content, equationRef.current, {
-          throwOnError: false,
-        });
-      } catch (e) {
-        console.error('KaTeX render error:', e);
-      }
-    }
-  }, [slides]);
+  
+  // 제목 우선순위: 1. filename (영상명) 2. noteData.title 3. 기본값
+  const title = filename || noteData?.title || 'Lecture Summary';
 
   return (
     <div className="flex flex-col h-[calc(100vh-140px)]">
@@ -84,8 +62,13 @@ export function NotePreview({ noteData, isLoading = false }: NotePreviewProps) {
             {slides && slides.length > 0 && (
               <>
                 <h3 className="mt-6 text-blue-600">1. 핵심 수식 (OCR 추출)</h3>
-                <div className="bg-slate-50 p-4 rounded-xl my-4 text-center">
-                  <div ref={equationRef} className="text-xl italic" />
+                <div className="bg-slate-50 p-4 rounded-xl my-4 text-left text-xs leading-relaxed">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {slides[0].ocr_content}
+                  </ReactMarkdown>
                 </div>
 
                 <h3 className="mt-6">2. 강의 요약</h3>

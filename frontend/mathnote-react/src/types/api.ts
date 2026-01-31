@@ -42,6 +42,8 @@ export interface TaskStatusResponse {
   status: 'pending' | 'uploaded' | 'processing' | 'completed' | 'failed';
   progress?: TaskProgress;
   error_message?: string | null;
+  filename?: string;
+  s3_key?: string;
 }
 
 export interface TaskProgress {
