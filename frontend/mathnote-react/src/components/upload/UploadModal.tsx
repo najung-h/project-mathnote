@@ -12,7 +12,7 @@ type UploadMode = 'file' | 'url';
 interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess?: (taskId: string) => void;
+  onUploadSuccess?: (taskId: string, uploadType: 'file' | 'url', fileExtension?: string, youtubeUrl?: string) => void;
 }
 
 export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalProps) {
@@ -82,6 +82,9 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
         // 파일 업로드
         const uploadResponse = await videoService.uploadFile(selectedFile);
         
+        // 파일 확장자 추출
+        const extension = selectedFile.name.split('.').pop() || 'mp4';
+        
         // 처리 시작
         await videoService.processVideo(uploadResponse.task_id, {
           options: {
@@ -90,7 +93,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
           },
         });
         
-        onUploadSuccess?.(uploadResponse.task_id);
+        onUploadSuccess?.(uploadResponse.task_id, 'file', extension);
       } else if (mode === 'url' && youtubeUrl) {
         // URL 유효성 검사
         const trimmedUrl = youtubeUrl.trim();
@@ -106,7 +109,7 @@ export function UploadModal({ isOpen, onClose, onUploadSuccess }: UploadModalPro
           sos_timestamps: [],
         });
         
-        onUploadSuccess?.(response.task_id);
+        onUploadSuccess?.(response.task_id, 'url', undefined, trimmedUrl);
       }
       
       // 모달 닫기 및 상태 초기화

@@ -4,10 +4,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainHeader, VideoPlayer, LectureInfo, NotePreview } from '@/components/main';
 import { UploadModal } from '@/components/upload';
 import { videoService, noteService } from '@/services';
 import type { TaskStatusResponse, NoteResponse } from '@/types';
+import { ROUTES } from '@/constants';
 
 interface MainPageProps {
   isUploadModalOpen: boolean;
@@ -30,7 +32,14 @@ export function MainPage({
   const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null);
   const [lectureTitle, setLectureTitle] = useState<string>('강의 영상');
+  const navigate = useNavigate();
+
+  // Welcome 페이지로 이동
+  const handleLogoClick = () => {
+    navigate(ROUTES.WELCOME);
+  };
 
   // 상태 폴링
   const pollTaskStatus = useCallback(async (taskId: string) => {
@@ -38,6 +47,14 @@ export function MainPage({
       const status = await videoService.getStatus(taskId);
       setTaskStatus(status);
       console.log('Task status:', status);
+
+      // 영상 URL 업데이트 (s3_key가 있으면)
+      if (status.s3_key && !videoUrl) {
+        const baseUrl = 'http://localhost:8000';
+        // s3_key는 "videos/{taskId}/original.mp4" 형식
+        setVideoUrl(`${baseUrl}/storage/${status.s3_key}`);
+        console.log('Video URL set:', `${baseUrl}/storage/${status.s3_key}`);
+      }
 
       if (status.status === 'completed') {
         // 처리 완료 - 노트 데이터 가져오기
@@ -60,7 +77,7 @@ export function MainPage({
       setError('상태 조회 중 오류가 발생했습니다.');
       setIsPolling(false);
     }
-  }, []);
+  }, [videoUrl]);
 
   // 폴링 효과
   useEffect(() => {
@@ -81,22 +98,38 @@ export function MainPage({
     console.log('SOS clicked at:', timestamp, 'Total SOS:', sosTimestamps.length + 1);
   };
 
-  const handleUploadSuccess = (taskId: string) => {
-    console.log('Upload success, task ID:', taskId);
+  const handleUploadSuccess = (taskId: string, uploadType: 'file' | 'url', fileExtension?: string, youtubeUrlParam?: string) => {
+    console.log('Upload success, task ID:', taskId, 'type:', uploadType);
     setCurrentTaskId(taskId);
     setIsPolling(true);
     setError(null);
     setNoteData(null);
     setTaskStatus(null);
     
-    // 영상 URL 가져오기
-    const baseUrl = 'http://localhost:8000';
-    setVideoUrl(`${baseUrl}/storage/videos/${taskId}/original.mp4`);
+    // 파일 업로드의 경우 즉시 영상 URL 설정
+    if (uploadType === 'file' && fileExtension) {
+      const baseUrl = 'http://localhost:8000';
+      const videoPath = `${baseUrl}/storage/videos/${taskId}/original.${fileExtension}`;
+      setVideoUrl(videoPath);
+      setYoutubeUrl(null);
+      console.log('Video URL set immediately:', videoPath);
+    } else if (uploadType === 'url' && youtubeUrlParam) {
+      // YouTube URL의 경우 즉시 iframe으로 표시
+      setYoutubeUrl(youtubeUrlParam);
+      setVideoUrl(null);
+      console.log('YouTube URL set immediately:', youtubeUrlParam);
+    } else {
+      setVideoUrl(null);
+      setYoutubeUrl(null);
+    }
   };
 
   return (
     <div className="bg-slate-50 text-slate-900 min-h-screen font-inter">
-      <MainHeader onUploadClick={onOpenUploadModal} />
+      <MainHeader 
+        onUploadClick={onOpenUploadModal}
+        onLogoClick={handleLogoClick}
+      />
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* 처리 상태 표시 */}
@@ -165,6 +198,7 @@ export function MainPage({
           <div className="col-span-12 lg:col-span-7 space-y-6">
             <VideoPlayer 
               videoUrl={videoUrl}
+              youtubeUrl={youtubeUrl}
               title={lectureTitle}
               onSosClick={handleSosClick} 
             />
