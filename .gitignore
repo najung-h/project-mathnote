@@ -355,3 +355,21 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/python,react,django,macos,windows,venv
+
+# ==================== MathNote Project Specific ====================
+
+# 로컬 테스트용 영상/오디오 파일
+sample_videos/*.mp4
+sample_videos/*.wav
+sample_videos/*.mp3
+sample_videos/*.webm
+
+# 생성된 노트 (로컬)
+outputs/
+
+# Whisper 모델 캐시
+*.pt
+
+# 임시 처리 파일
+temp/
+tmp/

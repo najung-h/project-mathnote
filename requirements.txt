@@ -1,1 +1,3 @@
+# conda create -n mathnote python=3.11
+# conda activate mathnote
 yt-dlp
