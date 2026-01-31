@@ -145,52 +145,22 @@ export function NotePreview({ noteData, isLoading = false, filename }: NotePrevi
         ) : (
           // 원본 자료 (Original Output)
           <>
-            <h1 className="text-2xl font-bold border-b pb-4">
+            <h1 className="text-2xl font-bold border-b pb-4 mb-6">
               {title} - 원본 자료
             </h1>
 
-            {slides && slides.length > 0 && slides.map((slide, index) => (
-              <div key={`original-${slide.slide_number}`} className="mb-8">
-                <h2 className="text-xl font-bold text-slate-800 mt-8 mb-4 flex items-center gap-2">
-                  <span className="bg-purple-500 text-white px-3 py-1 rounded-full text-sm">
-                    슬라이드 {slide.slide_number}
-                  </span>
-                  <span className="text-sm text-slate-500 font-normal">
-                    {Math.floor(slide.timestamp_start / 60)}:{String(Math.floor(slide.timestamp_start % 60)).padStart(2, '0')} - {Math.floor(slide.timestamp_end / 60)}:{String(Math.floor(slide.timestamp_end % 60)).padStart(2, '0')}
-                  </span>
-                </h2>
-
-                {/* 슬라이드 이미지 */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-slate-600 mb-2">📸 슬라이드 이미지</h3>
-                  <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
-                    <img 
-                      src={slide.image_url} 
-                      alt={`Slide ${slide.slide_number}`}
-                      className="w-full h-auto"
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23f1f5f9"/><text x="50%" y="50%" font-size="20" fill="%2364748b" text-anchor="middle" dominant-baseline="middle">이미지를 불러올 수 없습니다</text></svg>';
-                      }}
-                    />
-                  </div>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-slate-700 mb-3">🎤 음성 전사 원본 (STT)</h3>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap" style={{ lineHeight: '2' }}>
+                    {slides && slides.length > 0 
+                      ? slides.map(slide => slide.raw_transcript).filter(Boolean).join(' ')
+                      : '음성 전사 데이터가 없습니다.'}
+                  </p>
                 </div>
-
-                {/* STT 원본 텍스트 */}
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-slate-600 mb-2">🎤 음성 전사 원본 (STT)</h3>
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {slide.raw_transcript || '음성 전사 데이터가 없습니다.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 슬라이드 구분선 */}
-                {index < slides.length - 1 && (
-                  <hr className="my-8 border-slate-300" />
-                )}
               </div>
-            ))}
+            </div>
           </>
         )}
       </div>
