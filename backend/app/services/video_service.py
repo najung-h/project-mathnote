@@ -81,6 +81,8 @@ class VideoProcessingService:
             task["audio_result"] = audio_result
             task["progress"]["vision"] = 1.0
             task["progress"]["audio"] = 1.0
+            if hasattr(task_store, 'save'):
+                task_store.save(task_id)
             print(f"[{task_id}] Vision and Audio processing completed. Ready for synthesis.")
 
         except Exception as e:
@@ -88,6 +90,8 @@ class VideoProcessingService:
             traceback.print_exc()
             task["status"] = "failed"
             task["error_message"] = str(e)
+            if hasattr(task_store, 'save'):
+                task_store.save(task_id)
 
     @staticmethod
     async def run_synthesis_task(
@@ -106,7 +110,9 @@ class VideoProcessingService:
                 raise ValueError(f"Task {task_id} is not ready for synthesis. Current status: {task['status']}")
             
             task["status"] = "generating_summary"
-            
+            if hasattr(task_store, 'save'):
+                task_store.save(task_id)
+
             # 저장된 vision/audio 결과 가져오기
             vision_result = task.get("vision_result")
             audio_result = task.get("audio_result")
@@ -129,13 +135,17 @@ class VideoProcessingService:
             # 완료
             task["status"] = "completed"
             task["progress"]["synthesis"] = 1.0
+            if hasattr(task_store, 'save'):
+                task_store.save(task_id)
             print(f"[{task_id}] Synthesis completed.")
-            
+
         except Exception as e:
             import traceback
             traceback.print_exc()
             task["status"] = "failed"
             task["error_message"] = str(e)
+            if hasattr(task_store, 'save'):
+                task_store.save(task_id)
 
     @staticmethod
     async def _process_vision(

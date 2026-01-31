@@ -16,11 +16,12 @@ from app.schemas.responses import (
 )
 from app.services.video_service import VideoProcessingService
 from app.services.video_downloader import VideoDownloader
+from app.core.task_store import get_task_store
 
 router = APIRouter()
 
-# In-memory task storage (MVP용 - 추후 Redis/DB로 교체)
-_task_store: dict[str, dict] = {}
+# JSON 파일 기반 영구 저장소
+_task_store = get_task_store()
 
 
 async def download_and_process_url(
@@ -47,7 +48,8 @@ async def download_and_process_url(
         task["s3_key"] = f"videos/{task_id}/{downloaded_path.name}"
         task["filename"] = metadata.get("title") or downloaded_path.stem  # 영상 제목 또는 파일명
         task["channel_name"] = metadata.get("channel") or metadata.get("uploader")  # 채널명
-        
+        task_store.save(task_id)  # 변경사항 저장
+
         print(f"[{task_id}] Download completed. Starting processing...")
 
         # 2. 처리 시작
@@ -62,6 +64,7 @@ async def download_and_process_url(
         traceback.print_exc()
         task_store[task_id]["status"] = "failed"
         task_store[task_id]["error_message"] = str(e)
+        task_store.save(task_id)  # 에러 상태 저장
 
 
 @router.post("/fetch-url", response_model=ProcessVideoResponse)
@@ -179,6 +182,7 @@ async def process_video(
         ),
     }
     task["options"] = options
+    _task_store.save(task_id)  # 변경사항 저장
 
     # 백그라운드 처리 시작
     background_tasks.add_task(
@@ -216,8 +220,9 @@ async def add_sos_timestamp(
     
     # 타임스탬프 추가
     task["sos_timestamps"].append(timestamp)
+    _task_store.save(task_id)  # 변경사항 저장
     print(f"[{task_id}] SOS timestamp added: {timestamp}. Total: {len(task['sos_timestamps'])}")
-    
+
     return None
 
 
@@ -249,6 +254,7 @@ async def generate_summary(
     # completed 상태면 ready_for_synthesis로 되돌림
     if current_status == "completed":
         task["status"] = "ready_for_synthesis"
+        _task_store.save(task_id)  # 변경사항 저장
         print(f"[{task_id}] Resetting status from completed to ready_for_synthesis for re-synthesis")
 
     # 백그라운드로 synthesis 실행

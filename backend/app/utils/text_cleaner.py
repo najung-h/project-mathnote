@@ -16,25 +16,29 @@ def clean_hallucinations(text: str) -> str:
     if not text:
         return text
 
+    # 1. 수식 블록($$...$$) 단위 중복 제거
+    text = _dedupe_math_blocks(text)
+
+    # 2. 줄 단위 처리
     lines = text.split('\n')
     cleaned_lines = []
     prev_line = None
 
     for line in lines:
-        # 1. 한 줄 내에서 같은 패턴이 연속 반복되는 경우 제거
+        # 2-1. 한 줄 내에서 같은 패턴이 연속 반복되는 경우 제거
         # 20자 이상 패턴이 2번 이상 연속 반복되면 1번만 남김
         line = re.sub(r'(.{20,}?)\1{2,}', r'\1', line)
 
-        # 2. 연속 중복 줄 제거 (같은 줄이 연속으로 나오면 1개만 유지)
+        # 2-2. 연속 중복 줄 제거 (같은 줄이 연속으로 나오면 1개만 유지)
         stripped = line.strip()
         if stripped and stripped == prev_line:
             continue
 
-        # 3. \begin{array}가 한 줄에 3번 이상 → 환각
+        # 2-3. \begin{array}가 한 줄에 3번 이상 → 환각
         if line.count(r'\begin{array}') > 3:
             continue
 
-        # 4. 500자 넘는 줄에 \begin{array} 포함 → 환각 가능성
+        # 2-4. 500자 넘는 줄에 \begin{array} 포함 → 환각 가능성
         if len(line) > 500 and r'\begin{array}' in line:
             continue
 
@@ -43,3 +47,33 @@ def clean_hallucinations(text: str) -> str:
             prev_line = stripped
 
     return '\n'.join(cleaned_lines)
+
+
+def _dedupe_math_blocks(text: str) -> str:
+    """
+    수식 블록($$...$$) 단위 중복 제거
+    연속으로 같은 수식 블록이 나오면 첫 번째만 유지
+    """
+    # $$ 로 시작하고 $$ 로 끝나는 블록 찾기
+    pattern = r'(\$\$[^$]+\$\$)'
+    parts = re.split(pattern, text)
+
+    result = []
+    prev_block = None
+
+    for part in parts:
+        # 수식 블록인 경우
+        if part.startswith('$$') and part.endswith('$$'):
+            normalized = part.strip()
+            if normalized == prev_block:
+                continue  # 중복 블록 스킵
+            prev_block = normalized
+            result.append(part)
+        else:
+            # 일반 텍스트
+            # 빈 줄만 있는 경우 prev_block 리셋하지 않음
+            if part.strip():
+                prev_block = None  # 다른 내용이 있으면 prev_block 리셋
+            result.append(part)
+
+    return ''.join(result)
